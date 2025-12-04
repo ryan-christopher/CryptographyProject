@@ -1,0 +1,252 @@
+// import for random number generator
+use rand::Rng;
+
+// miller_rabin used to test if a number is prime or not, takes as input the
+// number to be tested for primality and the number of tests to occur
+fn miller_rabin(n: i128, num_tests: i32) -> bool {
+    if n % 2 == 0 {
+        return false;
+    }
+
+    // create variables for m and r
+    let mut m = n - 1;
+    let mut r = 0;
+    
+    // calculate r and m where n - 1 = (2 ** r) * m
+    while m % 2 == 0 {
+        m = m / 2;
+        r += 1;
+    }
+    
+    //println!("n: {:?}\nm: {:?}, r: {:?}", n, m, r);
+
+    // create vector to check if b generated was a repeat or not
+    let mut b_values = Vec::<i128>::new();
+
+    for mut _x in 1..=num_tests {
+        // generate random value b between 1 and n
+        let b = rand::rng().random_range(1..n);
+
+        // if b was already generated, iterate again to choose another random value
+        if b_values.contains(&b){
+            _x -= 1;
+            println!("b value repeated, choosing again");
+        }
+        
+        else{
+            b_values.push(b);
+            // b**m mod n
+            let test_1 = fast_exponentiation(b, m, n);
+            if test_1 == 1 || test_1 == n - 1 {
+                continue;
+            }
+            // (b**m)**2 mod n
+            let b_second_test = fast_exponentiation(test_1, 2, n);
+            let test_2 = fast_exponentiation(b_second_test, m, n);
+            if test_2 == n - 1 {
+                continue;
+            }
+            // ((b**m)**2)**2 mod n
+            let b_third_test = fast_exponentiation(test_2, 2, n);
+            let test_3 = fast_exponentiation(b_third_test, m, n);
+            if test_3 == n - 1 {
+                continue;
+            }
+            // ((b**m)**2)**r-1 mod n
+            let b_fourth_test = fast_exponentiation(test_2, r - 1, n);
+            let test_4 = fast_exponentiation(b_fourth_test, m, n);
+            if test_4 == n - 1 {
+                continue;
+            }
+            else{
+                // if this point is reached, the number is not prime
+                return false;
+            }
+        }
+    }
+    println!("p: {:?}", n);
+
+    return true;
+}
+
+
+
+// fast_exponentation takes i128 values for x, e, and n
+// and calculates (x**e) mod n, returns value as y
+fn fast_exponentiation(mut x: i128, mut e: i128, n: i128) -> i128 {
+    // set y to default value of 1
+    let mut y = 1;
+
+    // continue until value is 0
+    while e > 0 {
+        // if e is even, the ending binary digit is 0, divide e
+        // by 2 and raise x by power of 2
+        if e % 2 == 0 {
+            e = e / 2;
+            x = x.pow(2) % n;
+        }
+        // if e is odd, subtract 1 from e, multiply y by x,
+        // and get the product mod n
+        else {
+            e -= 1;
+            y = (x * y) % n;
+        }
+    }
+    //println!("x: {:?}, e: {:?}, y: {:?}", x, e, y);
+    // return y when done
+    return y;
+}
+
+// random_prime takes a minimum and maximum value as input, then finds
+// a prime number within that range
+fn random_prime(min_val: i128, max_val: i128) -> i128 {
+    let mut prime_found = false;
+    let mut number: i128 = 0;
+
+    while prime_found != true {
+        // randomly choose a value within the range min_val to max_val
+        number = rand::rng().random_range(min_val..=max_val);
+        // perform miller-rabin test with 20 attempts, if it is true then
+        // a prime has been found
+        if miller_rabin(number, 20) {
+            prime_found = true;
+        }
+    }
+    return number;
+}
+
+fn is_prime(n: i128) -> bool {
+    if n % 2 == 0 {
+        return false;
+    }
+    if n == 3 {
+        return true;
+    }
+    let mut search_val = 3 as i128;
+    let max_val = ((n as f64).sqrt().ceil() as i128) + 1;
+    while search_val <= max_val {
+        if n % search_val == 0 {
+            return false;
+        }
+        search_val += 2;
+    }
+    return true;
+}
+
+fn get_prime_factors(p: i128) -> Vec<i128> {
+    // create vector to check if b generated was a repeat or not
+    let mut prime_factors = Vec::<i128>::new();
+
+    let x = p - 1;
+
+    if x % 2 == 0 {
+        prime_factors.push(2);
+    }
+    let mut i = 3;
+    while i <= (x as f64).sqrt().ceil() as i128 {
+        if is_prime(i) && x % i == 0 {
+            prime_factors.push(i);
+        }
+        i += 2;
+    }
+
+    return prime_factors;
+}
+
+fn is_primitive_root(p: i128, b: i128) -> bool{
+    let prime_factors = get_prime_factors(p);
+
+    for factor in prime_factors{
+        if fast_exponentiation(b, (p - 1) / factor, p) == 1 {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+fn find_primitive_root(p: i128) -> i128 {
+
+    for b in 2..p {
+        if is_primitive_root(p, b) {
+            return b;
+        };
+    }
+
+    return 0;
+}
+
+fn find_rand_primitive_root(p: i128) -> i128 {
+
+    let mut counter = 0; 
+
+    while counter < p {
+        let b = rand::rng().random_range(2..=p);
+        if is_primitive_root(p, b) {
+            return b;
+        };
+        counter += 1;
+    }
+
+    return 0;
+}
+
+
+fn find_inverse(val_1: i128, val_2: i128) -> i128 {
+    return fast_exponentiation(val_1, val_2 - 2, val_2);
+}
+
+
+fn elgamal_gen_public_key(p: i128, g: i128, r: i128) -> i128{
+    return fast_exponentiation(g, r, p);
+}
+
+fn elgamal_encrypt(message: i128, recipient_pub_key: i128, priv_key: i128, p: i128) -> i128 {
+    let cipher = message * fast_exponentiation(recipient_pub_key, priv_key, p) % p;
+    return cipher;
+}
+
+fn elgamal_decrypt(cipher: i128, recipient_pub_key: i128, r: i128, p: i128) -> i128 {
+    //let mut key = fast_exponentiation(recipient_pub_key, priv_key, p);
+    let inverse_val = fast_exponentiation(recipient_pub_key, r, p);
+    let inverse  = find_inverse(inverse_val, p);
+    //println!("{}, {}", inverse, cipher);
+    let message = (inverse * cipher) % p;
+    return message;
+}
+
+
+fn main() {
+    // random_prime has been tested up to 10,000,000,000,000,000,000
+    //println!("{:?}", random_prime(1, 1000000000000));
+    //println!("{:?}", get_prime_factors(157));
+    //println!("{:?}", is_primitive_root(157, 5));
+
+
+    // Alexan provides p and g
+    //println!("Primitive root for p= 5393: \ng={:?}", find_primitive_root(5393));
+    println!("Primitive root for p= 5393");
+    println!("Generator included: 3");
+    
+    // Ryan chooses a random number (r) as a private key and calculates the public key
+    // then shows Alexan the private key
+    println!("Ryan's public key: {:?}", elgamal_gen_public_key(5393, 3, 120));
+
+    // Alexan sends Ryan the encrypted message along with g^l where l is the nonce
+    println!("g^nonce mod p = 4525");
+    println!("Ciphertext = 393");
+
+    // Ryan decrypts with the ciphertext, g^nonce mod p, Ryan's private key, and p
+    println!("Message decrypted: {:?}", elgamal_decrypt(3940, 743, 120, 5393));
+    println!("RECEIVED");
+    println!("Encrypting");
+    println!("public val: {:?}", elgamal_gen_public_key(3677, 3, 120));
+    println!("message = 152 \nciphertext = {:?}", elgamal_encrypt(152, 3609, 120, 3677));
+    //println!("Message decrypted: {:?}", elgamal_decrypt(33, 45, 120, 103));
+
+    //println!("{:?}", find_primitive_root(random_prime(1, 1000000000000)));
+    //println!("{:?}", find_rand_primitive_root(random_prime(1, 10000)));
+    //println!("{:?}", elgamal_gen_public_key(103, 5, 79));
+    //println!("{:?}", elgamal_encrypt(43, 62, 79, 103));
+    //println!("{:?}", elgamal_decrypt(33, 45, 101, 103));
+}
