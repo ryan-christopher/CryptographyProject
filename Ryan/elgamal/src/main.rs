@@ -216,37 +216,73 @@ fn elgamal_decrypt(cipher: i128, recipient_pub_key: i128, r: i128, p: i128) -> i
 }
 
 
+// baby_step_giant_step takes the variables log_base, log_val, and z
+// as input and finds the discrete log (the value to raise the log_base
+// to in order to get log_val mod z)
+fn baby_step_giant_step(log_base: i128, log_val: i128, z: i128) -> i128 {
+    // find m by taking the cieling of the square root of z-1
+    let m = (z as f64 - 1.0).sqrt().ceil() as i128;
+
+    // create vector to store list of values for j, then
+    // calculate each value for j from 0 to m-1 as (log_base^j) mod z
+    let mut j_list = Vec::<i128>::new();
+    for j in 0..m {
+        j_list.push(log_base.pow(j as u32) % z);
+    }
+
+    // create vector to store list of values for i
+    // [giving up here, has something to do with multiplicative inverse, use extended euclidian algo and if it is 1 do something?]
+    //println!("m: {}", m);
+    //println!("j: {:?}", j_list);
+    let inverse = find_inverse(log_base, z);
+    let inverse_pow_m = fast_exponentiation(inverse, m, z);
+
+    let mut i_list = Vec::<i128>::new();
+    for i in 0..m {
+        let inverse_pow_m_i = fast_exponentiation(inverse_pow_m, i, z);
+        i_list.push((log_val * inverse_pow_m_i)  % z);
+
+        let check_i_and_m = j_list.clone().into_iter().position(|x| x == i_list[i as usize]);
+        if check_i_and_m.is_some(){
+            //println!("{}", i_list[i as usize]);
+            //println!("{}", i * m + check_i_and_m.unwrap() as i128);
+            return i * m + check_i_and_m.unwrap() as i128;
+        }
+
+    }
+    return 0;
+}
+
+
 fn main() {
     // random_prime has been tested up to 10,000,000,000,000,000,000
     //println!("{:?}", random_prime(1, 1000000000000));
     //println!("{:?}", get_prime_factors(157));
-    //println!("{:?}", is_primitive_root(157, 5));
 
-
+/* 
     // Alexan provides p and g
-    //println!("Primitive root for p= 5393: \ng={:?}", find_primitive_root(5393));
-    println!("Primitive root for p= 5393");
-    println!("Generator included: 3");
-    
     // Ryan chooses a random number (r) as a private key and calculates the public key
-    // then shows Alexan the private key
     println!("Ryan's public key: {:?}", elgamal_gen_public_key(5393, 3, 120));
 
     // Alexan sends Ryan the encrypted message along with g^l where l is the nonce
-    println!("g^nonce mod p = 4525");
+    println!("public val = 4525");
     println!("Ciphertext = 393");
 
     // Ryan decrypts with the ciphertext, g^nonce mod p, Ryan's private key, and p
     println!("Message decrypted: {:?}", elgamal_decrypt(3940, 743, 120, 5393));
-    println!("RECEIVED");
-    println!("Encrypting");
     println!("public val: {:?}", elgamal_gen_public_key(3677, 3, 120));
     println!("message = 152 \nciphertext = {:?}", elgamal_encrypt(152, 3609, 120, 3677));
-    //println!("Message decrypted: {:?}", elgamal_decrypt(33, 45, 120, 103));
+    */
 
-    //println!("{:?}", find_primitive_root(random_prime(1, 1000000000000)));
-    //println!("{:?}", find_rand_primitive_root(random_prime(1, 10000)));
-    //println!("{:?}", elgamal_gen_public_key(103, 5, 79));
-    //println!("{:?}", elgamal_encrypt(43, 62, 79, 103));
-    //println!("{:?}", elgamal_decrypt(33, 45, 101, 103));
+
+    // TEST RUN
+    println!("p = 3677");
+    println!("primitive root = {}", find_primitive_root(3677));
+    println!("my public val: 683");
+    println!("decrypted: {}", elgamal_decrypt(1942, 2341, 1234, 3677));
+    println!("encrypted: {}", elgamal_encrypt(420, 3609, 1234, 3677));
+
+    println!("{}", baby_step_giant_step(2, 3, 29));
+    println!("{}", baby_step_giant_step(2, 3, 101));
+
 }
