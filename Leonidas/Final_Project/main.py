@@ -156,7 +156,7 @@ def handle_elgamal(cipher: ElGamal, operation: str):
 
 
 def main():
-    print("Small Cryptography Project (RSA / ElGamal) in Python.\n")
+    print("METCS789 Cryptography Project for Anatoly Temkin (RSA / ElGamal) in Python.\n")
     print("You will now be guided step by step through the selection.")
     print(f"Available algorithms: {VALID_ALGOS}")
     print(f"Available operations: {VALID_OPS}\n")
