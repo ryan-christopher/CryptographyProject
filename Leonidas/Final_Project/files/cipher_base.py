@@ -7,7 +7,7 @@ from .string_utils import color_string
 
 class CipherBase:
     """
-    Basisklasse analog zu deiner abstrakten C++-Klasse Cipher.
+    Base class for Cipher.
     """
 
     def print_run_header(self, cipher_name, operation, file_path):

@@ -2,8 +2,8 @@
 
 def color_string(text, print_red=False):
     """
-    Färbt einen Text auf der Konsole ein.
-    Grün für normal, rot für Fehler / Attack.
+    Colors a text on the console.
+    Green for normal, red for error / attack.
     """
     bold_red = "\033[1;31m"
     green = "\033[32m"
@@ -14,8 +14,7 @@ def color_string(text, print_red=False):
 
 def join_strings(items, delimiter):
     """
-    Verbindet eine Liste von Strings mit einem Delimiter.
-    Extra einfach geschrieben, so wie man es als Student machen würde.
+    Connects a list of strings with a delimiter.
     """
     result = ""
     for index, part in enumerate(items):
@@ -27,6 +26,6 @@ def join_strings(items, delimiter):
 
 def lower_string(s):
     """
-    Liefert eine kleingeschriebene Version eines Strings zurück.
+    Returns a lowercase version of a string.
     """
     return str(s).lower()

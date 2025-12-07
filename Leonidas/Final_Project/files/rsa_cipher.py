@@ -15,11 +15,20 @@ from .string_utils import color_string
 
 class RSA(CipherBase):
     """
-    Port deiner C++-RSA-Klasse nach Python.
+    RSA class in Python.
     """
 
-    def __init__(self, public_key_file="rsa_key.pub", private_key_file="rsa_key",
-                 min_prime=1000, max_prime=10000):
+    def __init__(
+        self,
+        public_key_file="rsa_key.pub",
+        private_key_file="rsa_key",
+        min_prime=1000,
+        max_prime=10000,
+        load_from_files=True,
+        n: int = None,
+        e: int = None,
+        d: int = None,
+    ):
         self.public_key_file = public_key_file
         self.private_key_file = private_key_file
 
@@ -27,7 +36,15 @@ class RSA(CipherBase):
         self.e = None
         self.d = None
 
-        if self.load_keys():
+        # If numeric key components were provided directly, use them
+        if n is not None:
+            self.n = int(n)
+            self.e = int(e) if e is not None else None
+            self.d = int(d) if d is not None else None
+            return
+
+        # Otherwise try to load from files (legacy behaviour) or generate new keys
+        if load_from_files and self.load_keys():
             sys.stderr.write("Found existing RSA keys.\n")
             sys.stderr.write(f"  Public:  {self.public_key_file}\n")
             sys.stderr.write(f"  Private: {self.private_key_file}\n")
@@ -35,10 +52,12 @@ class RSA(CipherBase):
             sys.stderr.write("No existing RSA keys found. Generating new keys...\n")
             sys.stderr.write(f"  Prime range: [{min_prime}, {max_prime}]\n")
             self.generate_keys(min_prime, max_prime)
-            self.save_keys()
-            sys.stderr.write("Keys generated and saved to:\n")
-            sys.stderr.write(f"  Public:  {self.public_key_file}\n")
-            sys.stderr.write(f"  Private: {self.private_key_file}\n")
+            try:
+                self.save_keys()
+            except RuntimeError:
+                # If saving fails, continue with in-memory keys
+                pass
+            sys.stderr.write("Keys generated\n")
 
     def generate_keys(self, min_prime, max_prime):
         bootstrap = Bootstrap()
@@ -122,7 +141,7 @@ class RSA(CipherBase):
 
     def pollards_rho(self, n):
         """
-        Faktorisierung von n mit Pollard's Rho.
+        Factorization of n using Pollard's Rho.
         """
         n = int(n)
         if n == 1:
@@ -154,7 +173,7 @@ class RSA(CipherBase):
 
     def attack(self, cipher_file_path, target_pubkey_path):
         """
-        Angriff: Faktorisierung des Zielmodulus und Wiederherstellung des Klartextes.
+        Attack: Factorization of the target modulus and recovery of the plaintext.
         """
         sys.stderr.write("\n=== RSA (Factorization) ===\n\n")
 
@@ -177,19 +196,44 @@ class RSA(CipherBase):
 
         plain_text = mod_pow(cipher_text, d_target, n_target)
         msg = color_string(str(plain_text))
-        sys.stderr.write("\n✅ Successfully decrypted message: " + msg + "\n")
+        sys.stderr.write("\n Successfully decrypted message: " + msg + "\n")
 
         return plain_text
     
     def attack_from_value(self, cipher_text, target_pubkey_path="target_rsa_key.pub"):
         """
-        Angriff wie in attack(), aber der Chiffretext wird direkt als Zahl übergeben
-        statt aus einer Datei gelesen zu werden.
+        Attack like in attack(), but the ciphertext is directly provided as a number
+        instead of being read from a file.
         """
         sys.stderr.write("\n=== RSA (Factorization) ===\n\n")
 
         sys.stderr.write(f"Step 1: Read public key {target_pubkey_path}...\n\n")
         n_target, e_target = self.read_key_file(target_pubkey_path)
+
+        sys.stderr.write("Step 2: Finding divisor of n ...\n\n")
+        p = self.pollards_rho(n_target)
+        q = n_target // p
+
+        sys.stderr.write(f"Step 3: Calculating phi({n_target}) ...\n\n")
+        phi = (p - 1) * (q - 1)
+
+        sys.stderr.write("Step 4: Calculating private exponent d ...\n\n")
+        d_target = mod_inverse(e_target, phi)
+
+        sys.stderr.write("Step 5: Decrypting ciphertext value ...\n")
+        cipher_text = int(cipher_text)
+        plain_text = mod_pow(cipher_text, d_target, n_target)
+        msg = color_string(str(plain_text))
+        sys.stderr.write("\n Successfully decrypted message: " + msg + "\n")
+
+        return plain_text
+
+    def attack_from_components(self, cipher_text, n_target, e_target):
+        """
+        Faktorisiere n_target und entschlüssele cipher_text, wenn die
+        öffentlichen Komponenten (n_target, e_target) direkt übergeben werden.
+        """
+        sys.stderr.write("\n=== RSA (Factorization) ===\n\n")
 
         sys.stderr.write("Step 2: Finding divisor of n ...\n\n")
         p = self.pollards_rho(n_target)

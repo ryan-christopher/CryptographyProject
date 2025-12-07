@@ -13,13 +13,21 @@ from .string_utils import color_string
 
 class ElGamal(CipherBase):
     """
-    Port deiner ElGamal-Implementierung nach Python.
+    ElGamal implementation in Python.
     """
 
-    def __init__(self, public_key_file="elgamal_key.pub",
-                 private_key_file="elgamal_key",
-                 min_random_number=1,
-                 max_random_number=10000):
+    def __init__(
+        self,
+        public_key_file="elgamal_key.pub",
+        private_key_file="elgamal_key",
+        min_random_number=1,
+        max_random_number=10000,
+        load_from_files=True,
+        p: int = None,
+        g: int = None,
+        public_key: int = None,
+        private_key: int = None,
+    ):
         self.public_key_file = public_key_file
         self.private_key_file = private_key_file
 
@@ -28,7 +36,15 @@ class ElGamal(CipherBase):
         self.public_key = None
         self.private_key = None
 
-        if self.load_keys():
+        # If numeric components provided, use them directly
+        if p is not None:
+            self.p = int(p)
+            self.g = int(g) if g is not None else None
+            self.public_key = int(public_key) if public_key is not None else None
+            self.private_key = int(private_key) if private_key is not None else None
+            return
+
+        if load_from_files and self.load_keys():
             sys.stderr.write("Found existing ElGamal keys.\n")
             sys.stderr.write(f"  Public:  {self.public_key_file}\n")
             sys.stderr.write(f"  Private: {self.private_key_file}\n")
@@ -36,10 +52,11 @@ class ElGamal(CipherBase):
             sys.stderr.write("No existing ElGamal keys found. Generating new keys...\n")
             sys.stderr.write(f"  Prime range: [{min_random_number}, {max_random_number}]\n")
             self.generate_keys(min_random_number, max_random_number)
-            self.save_keys()
-            sys.stderr.write("Keys generated and saved to:\n")
-            sys.stderr.write(f"  Public:  {self.public_key_file}\n")
-            sys.stderr.write(f"  Private: {self.private_key_file}\n")
+            try:
+                self.save_keys()
+            except RuntimeError:
+                pass
+            sys.stderr.write("Keys generated\n")
 
     def generate_keys(self, min_value, max_value):
         bootstrap = Bootstrap()
@@ -95,8 +112,8 @@ class ElGamal(CipherBase):
 
     def baby_step_giant_step(self, a, value, p):
         """
-        Löse a^x ≡ value (mod p) via Baby-Step Giant-Step.
-        Wird genutzt, um den privaten Schlüssel aus (p, g, publicKey) zu finden.
+        Solve a^x ≡ value (mod p) via Baby-Step Giant-Step.
+        Used to recover the private key from (p, g, publicKey).
         """
         from math import isqrt
 
@@ -127,14 +144,14 @@ class ElGamal(CipherBase):
 
                 check = mod_pow(a, x, p)
                 if check == value:
-                    sys.stderr.write(f"✅ Verified: {a}^{x} ≡ {value} (mod {p})\n")
+                    sys.stderr.write(f"Verified: {a}^{x} ≡ {value} (mod {p})\n")
                     return x
                 else:
-                    sys.stderr.write("⚠️ Verification failed with m*j - i, trying m*j + i...\n")
+                    sys.stderr.write("Verification failed with m*j - i, trying m*j + i...\n")
                     x_alt = m * j + i
                     check_alt = mod_pow(a, x_alt, p)
                     if check_alt == value:
-                        sys.stderr.write(f"✅ Verified: {a}^{x_alt} ≡ {value} (mod {p})\n")
+                        sys.stderr.write(f"Verified: {a}^{x_alt} ≡ {value} (mod {p})\n")
                         return x_alt
 
             gamma = (gamma * a_inv) % p
@@ -143,13 +160,13 @@ class ElGamal(CipherBase):
 
     def attack(self, cipher_file_path):
         """
-        Angriff auf ElGamal: diskreter Logarithmus via Baby-Step Giant-Step.
+        Attack on ElGamal: discrete logarithm via Baby-Step Giant-Step.
         """
         sys.stderr.write("\n=== ElGamal Attack (Discrete Logarithm) ===\n")
 
         sys.stderr.write("\nStep 1: Recovering private key x from public key (p, g, publicKey)...\n")
         recovered_x = self.baby_step_giant_step(self.g, self.public_key, self.p)
-        sys.stderr.write(f"\n✅ Successfully recovered private key: x = {recovered_x}\n")
+        sys.stderr.write(f"\nSuccessfully recovered private key: x = {recovered_x}\n")
 
         sys.stderr.write(f"\nStep 2: Reading ciphertext from {cipher_file_path}...\n")
         text = self.read_file(cipher_file_path)
@@ -170,20 +187,20 @@ class ElGamal(CipherBase):
         self.private_key = original_x
 
         msg = color_string(str(plaintext))
-        sys.stderr.write("\n✅ Successfully decrypted message: " + msg + "\n")
+        sys.stderr.write("\nSuccessfully decrypted message: " + msg + "\n")
 
         return plaintext
 
     def attack_from_values(self, c1, c2):
         """
-        Angriff wie in attack(), aber (c1, c2) werden direkt als Werte übergeben
-        statt aus einer Datei gelesen zu werden.
+        Attack like in attack(), but (c1, c2) are directly provided as values
+        instead of being read from a file.
         """
         sys.stderr.write("\n=== ElGamal Attack (Discrete Logarithm) ===\n")
 
         sys.stderr.write("\nStep 1: Recovering private key x from public key (p, g, publicKey)...\n")
         recovered_x = self.baby_step_giant_step(self.g, self.public_key, self.p)
-        sys.stderr.write(f"\n✅ Successfully recovered private key: x = {recovered_x}\n")
+        sys.stderr.write(f"\n Successfully recovered private key: x = {recovered_x}\n")
 
         sys.stderr.write("\nStep 2: Decrypting given ciphertext (c1, c2)...\n")
         c1 = int(c1)
@@ -194,7 +211,7 @@ class ElGamal(CipherBase):
         self.private_key = original_x
 
         msg = color_string(str(plaintext))
-        sys.stderr.write("\n✅ Successfully decrypted message: " + msg + "\n")
+        sys.stderr.write("\n Successfully decrypted message: " + msg + "\n")
 
         return plaintext
 
