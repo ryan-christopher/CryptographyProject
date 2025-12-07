@@ -3,7 +3,7 @@ use rand::Rng;
 
 // miller_rabin used to test if a number is prime or not, takes as input the
 // number to be tested for primality and the number of tests to occur
-fn miller_rabin(n: i128, num_tests: i32) -> bool {
+pub fn miller_rabin(n: i128, num_tests: i32) -> bool {
     if n % 2 == 0 {
         return false;
     }
@@ -73,7 +73,7 @@ fn miller_rabin(n: i128, num_tests: i32) -> bool {
 
 // fast_exponentation takes i128 values for x, e, and n
 // and calculates (x**e) mod n, returns value as y
-fn fast_exponentiation(mut x: i128, mut e: i128, n: i128) -> i128 {
+pub fn fast_exponentiation(mut x: i128, mut e: i128, n: i128) -> i128 {
     // set y to default value of 1
     let mut y = 1;
 
@@ -99,7 +99,7 @@ fn fast_exponentiation(mut x: i128, mut e: i128, n: i128) -> i128 {
 
 // random_prime takes a minimum and maximum value as input, then finds
 // a prime number within that range
-fn random_prime(min_val: i128, max_val: i128) -> i128 {
+pub fn random_prime(min_val: i128, max_val: i128) -> i128 {
     let mut prime_found = false;
     let mut number: i128 = 0;
 
@@ -115,7 +115,7 @@ fn random_prime(min_val: i128, max_val: i128) -> i128 {
     return number;
 }
 
-fn is_prime(n: i128) -> bool {
+pub fn is_prime(n: i128) -> bool {
     if n % 2 == 0 {
         return false;
     }
@@ -133,7 +133,7 @@ fn is_prime(n: i128) -> bool {
     return true;
 }
 
-fn get_prime_factors(p: i128) -> Vec<i128> {
+pub fn get_prime_factors(p: i128) -> Vec<i128> {
     // create vector to check if b generated was a repeat or not
     let mut prime_factors = Vec::<i128>::new();
 
@@ -153,7 +153,7 @@ fn get_prime_factors(p: i128) -> Vec<i128> {
     return prime_factors;
 }
 
-fn is_primitive_root(p: i128, b: i128) -> bool{
+pub fn is_primitive_root(p: i128, b: i128) -> bool{
     let prime_factors = get_prime_factors(p);
 
     for factor in prime_factors{
@@ -165,7 +165,7 @@ fn is_primitive_root(p: i128, b: i128) -> bool{
     return true;
 }
 
-fn find_primitive_root(p: i128) -> i128 {
+pub fn find_primitive_root(p: i128) -> i128 {
 
     for b in 2..p {
         if is_primitive_root(p, b) {
@@ -176,7 +176,7 @@ fn find_primitive_root(p: i128) -> i128 {
     return 0;
 }
 
-fn find_rand_primitive_root(p: i128) -> i128 {
+pub fn find_rand_primitive_root(p: i128) -> i128 {
 
     let mut counter = 0; 
 
@@ -192,21 +192,21 @@ fn find_rand_primitive_root(p: i128) -> i128 {
 }
 
 
-fn find_inverse(val_1: i128, val_2: i128) -> i128 {
+pub fn find_inverse(val_1: i128, val_2: i128) -> i128 {
     return fast_exponentiation(val_1, val_2 - 2, val_2);
 }
 
 
-fn elgamal_gen_public_key(p: i128, g: i128, r: i128) -> i128{
+pub fn elgamal_gen_public_key(p: i128, g: i128, r: i128) -> i128{
     return fast_exponentiation(g, r, p);
 }
 
-fn elgamal_encrypt(message: i128, recipient_pub_key: i128, priv_key: i128, p: i128) -> i128 {
+pub fn elgamal_encrypt(message: i128, recipient_pub_key: i128, priv_key: i128, p: i128) -> i128 {
     let cipher = message * fast_exponentiation(recipient_pub_key, priv_key, p) % p;
     return cipher;
 }
 
-fn elgamal_decrypt(cipher: i128, recipient_pub_key: i128, r: i128, p: i128) -> i128 {
+pub fn elgamal_decrypt(cipher: i128, recipient_pub_key: i128, r: i128, p: i128) -> i128 {
     //let mut key = fast_exponentiation(recipient_pub_key, priv_key, p);
     let inverse_val = fast_exponentiation(recipient_pub_key, r, p);
     let inverse  = find_inverse(inverse_val, p);
@@ -219,7 +219,7 @@ fn elgamal_decrypt(cipher: i128, recipient_pub_key: i128, r: i128, p: i128) -> i
 // baby_step_giant_step takes the variables log_base, log_val, and z
 // as input and finds the discrete log (the value to raise the log_base
 // to in order to get log_val mod z)
-fn baby_step_giant_step(log_base: i128, log_val: i128, z: i128) -> i128 {
+pub fn baby_step_giant_step(log_base: i128, log_val: i128, z: i128) -> i128 {
     // find m by taking the cieling of the square root of z-1
     let m = (z as f64 - 1.0).sqrt().ceil() as i128;
 
@@ -251,38 +251,4 @@ fn baby_step_giant_step(log_base: i128, log_val: i128, z: i128) -> i128 {
 
     }
     return 0;
-}
-
-
-fn main() {
-    // random_prime has been tested up to 10,000,000,000,000,000,000
-    //println!("{:?}", random_prime(1, 1000000000000));
-    //println!("{:?}", get_prime_factors(157));
-
-/* 
-    // Alexan provides p and g
-    // Ryan chooses a random number (r) as a private key and calculates the public key
-    println!("Ryan's public key: {:?}", elgamal_gen_public_key(5393, 3, 120));
-
-    // Alexan sends Ryan the encrypted message along with g^l where l is the nonce
-    println!("public val = 4525");
-    println!("Ciphertext = 393");
-
-    // Ryan decrypts with the ciphertext, g^nonce mod p, Ryan's private key, and p
-    println!("Message decrypted: {:?}", elgamal_decrypt(3940, 743, 120, 5393));
-    println!("public val: {:?}", elgamal_gen_public_key(3677, 3, 120));
-    println!("message = 152 \nciphertext = {:?}", elgamal_encrypt(152, 3609, 120, 3677));
-    */
-
-
-    // TEST RUN
-    println!("p = 3677");
-    println!("primitive root = {}", find_primitive_root(3677));
-    println!("my public val: 683");
-    println!("decrypted: {}", elgamal_decrypt(1942, 2341, 1234, 3677));
-    println!("encrypted: {}", elgamal_encrypt(420, 3609, 1234, 3677));
-
-    println!("{}", baby_step_giant_step(2, 3, 29));
-    println!("{}", baby_step_giant_step(2, 3, 101));
-
 }
