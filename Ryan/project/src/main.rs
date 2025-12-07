@@ -1,5 +1,3 @@
-use crate::rsa::generate_pqn;
-
 //mod elgamal;
 mod rsa;
 fn main() {
