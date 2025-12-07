@@ -215,6 +215,14 @@ pub fn elgamal_decrypt(cipher: i128, recipient_pub_key: i128, r: i128, p: i128) 
     return message;
 }
 
+pub fn elgamal_intercept(cipher: i128, generator: i128, target_pub_key: i128, recipient_pub_key: i128, p: i128) -> i128 {
+    let recovered_key = baby_step_giant_step(generator, target_pub_key, p);
+    //println!("{}", recovered_key);
+    let message = elgamal_decrypt(cipher, recipient_pub_key, recovered_key, p);
+    //println!("{}", message);
+    return message
+}
+
 
 // baby_step_giant_step takes the variables log_base, log_val, and z
 // as input and finds the discrete log (the value to raise the log_base

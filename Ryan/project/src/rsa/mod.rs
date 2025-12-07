@@ -64,7 +64,7 @@ pub fn miller_rabin(n: i128, num_tests: i32) -> bool {
             }
         }
     }
-    println!("p: {:?}", n);
+    //println!("p: {:?}", n);
 
     return true;
 }
@@ -161,7 +161,7 @@ pub fn extended_euclid(a: i128, b: i128) -> (i128, i128) {
 }
 
 pub fn find_inverse(val_1: i128, val_2: i128) -> i128 {
-    let (mut x, y) = extended_euclid(val_1, val_2);
+    let (mut x, _y) = extended_euclid(val_1, val_2);
 
     while x < 0 {
         x += val_2;
@@ -185,10 +185,47 @@ pub fn find_encryption_component(n: i128) -> i128 {
     }
 }
 
+pub fn pollards_rho(n: i128) -> i128 {
+    println!("{}", n);
+    if n % 2 == 0 {
+        return 2
+    }
+    let (mut x, mut y) = (5 as i128, 26 as i128);
+
+    let mut gcd = euclid(y - x, n);
+
+    loop {
+        if gcd > 1 {
+            break
+        }
+        x = (fast_exponentiation(x, 2, n) + 1) % n;
+        y = fast_exponentiation(y, 2, n) + 1 % n;
+        y = fast_exponentiation(y, 2, n) + 1 % n;
+        gcd = euclid((y - x).abs(), n);
+        //println!("gcd: {}, y: {}, x: {}", gcd, y, x);
+        
+        if gcd == n {
+            gcd = 1;
+            x = rand::rng().random_range(1..n);
+            y = rand::rng().random_range(1..n);
+        }
+
+    }
+    return gcd
+}
+
 pub fn encrypt(message: i128, e: i128, n: i128) -> i128 {
     return fast_exponentiation(message, e, n)
 }
 
 pub fn decrypt(ciphertext: i128, n: i128, d: i128) -> i128 {
     return fast_exponentiation(ciphertext, d, n)
+}
+
+pub fn rsa_intercept(ciphertext: i128, n: i128, e: i128) -> i128 {
+    let factor_1 = pollards_rho(n);
+    let factor_2 = n / factor_1;
+    let phi_n = (factor_1 - 1) * (factor_2 - 1);
+    let d = find_inverse(e, phi_n);
+    return decrypt(ciphertext, n, d)
 }
