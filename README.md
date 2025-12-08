@@ -271,7 +271,7 @@ Leonidas sends the message 67:
 
         Cipher: 12674548
 
-Alexan decyprts the message and gets:
+Alexan decrypts the message and gets:
 
         67
 
