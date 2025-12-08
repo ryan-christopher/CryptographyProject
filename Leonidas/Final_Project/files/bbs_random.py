@@ -6,8 +6,8 @@ from .crypto_utils import mod_pow
 
 class BBSRandom:
     """
-    Blum-Blum-Shub Zufallszahlengenerator.
-    Entspricht grob deiner C++-Klasse BBSRandom.
+    Blum-Blum-Shub random number generator.
+    
     """
 
     def __init__(self, bit_length=512, min_value=None, max_value=None):
@@ -18,7 +18,7 @@ class BBSRandom:
         bootstrap = Bootstrap()
 
         if min_value is None or max_value is None:
-            # Konstruktor mit bit_length
+            # Constructor with bit_length
             self.bit_length = bit_length
             p = bootstrap.generate_prime_congruent_3_mod_4(bit_length)
             q = bootstrap.generate_prime_congruent_3_mod_4(bit_length)
@@ -27,7 +27,7 @@ class BBSRandom:
             self.n = p * q
             self.current_s = bootstrap.generate_seed(self.n)
         else:
-            # Konstruktor mit [min, max]
+            # Constructor with [min, max]
             p = bootstrap.generate_prime_in_range_congruent_3_mod_4(min_value, max_value)
             q = bootstrap.generate_prime_in_range_congruent_3_mod_4(min_value, max_value)
             while p == q:
@@ -48,7 +48,7 @@ class BBSRandom:
 
     def rand(self):
         """
-        Erzeugt eine zufällige Zahl mit ungefähr bit_length Bits.
+        Generates a random number with approximately bit_length bits.
         """
         rand_number = 0
         for x in range(self.bit_length):

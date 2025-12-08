@@ -5,7 +5,7 @@ from typing import Any
 
 def are_relatively_prime(x, y):
     """
-    Gibt True zurück, wenn gcd(x, y) == 1.
+    Returns True if gcd(x, y) == 1.
     """
     if x < 0:
         x = -x
@@ -17,8 +17,8 @@ def are_relatively_prime(x, y):
 
 def extended_gcd(m, n):
     """
-    Erweiterter Euklid:
-    Liefert (gcd, x, y) mit m*x + n*y = gcd.
+    Extended Euclidean Algorithm:
+    Returns (gcd, x, y) such that m*x + n*y = gcd.
     """
     old_r, r = int(m), int(n)
     old_s, s = 1, 0
@@ -39,13 +39,13 @@ def extended_gcd(m, n):
         t = old_t - quotient * t
         old_t = temp_t
 
-    # old_r ist gcd, old_s und old_t sind die Koeffizienten
+    # old_r is gcd, old_s and old_t are the coefficients
     return old_r, old_s, old_t
 
 
 def find_gcd(large_number, small_number):
     """
-    Normaler Euklidischer Algorithmus.
+    General Euclidean Algorithm.
     """
     large_number = int(large_number)
     small_number = int(small_number)
@@ -61,7 +61,7 @@ def find_gcd(large_number, small_number):
 
 def is_prime(number):
     """
-    Einfacher Primzahltest (deterministisch, für kleinere Zahlen ok).
+    Simple primality test (deterministic, suitable for smaller numbers).
     """
     number = int(number)
     if number <= 1:
@@ -82,7 +82,7 @@ def is_prime(number):
 
 def miller_rabin_test(n, rounds, rng: Any):
     """
-    Probabilistischer Primzahltest (Miller-Rabin).
+    Probabilistic primality test (Miller-Rabin).
     """
     n = int(n)
     if n <= 1:
@@ -120,8 +120,8 @@ def miller_rabin_test(n, rounds, rng: Any):
 
 def mod_inverse(a, m):
     """
-    Modularer Inverser: a^(-1) mod m.
-    Wirft RuntimeError, wenn gcd != 1.
+    Modular inverse: a^(-1) mod m.
+    Raises RuntimeError if gcd != 1.
     """
     a = int(a)
     m = int(m)
@@ -137,8 +137,8 @@ def mod_inverse(a, m):
 
 def mod_pow(base, exp, mod):
     """
-    Schnelle Exponentiation: base^exp % mod.
-    (Man könnte auch pow(base, exp, mod) nehmen.)
+    Fast exponentiation: base^exp % mod.
+    (You could also use pow(base, exp, mod).)
     """
     base = int(base) % int(mod)
     exp = int(exp)
@@ -156,7 +156,7 @@ def mod_pow(base, exp, mod):
 
 def get_prime_factors(n):
     """
-    Zerlegt n in seine (einzigartigen) Primfaktoren.
+    Decomposes n into its (unique) prime factors.
     """
     n = int(n)
     prime_factors = set()
@@ -182,7 +182,7 @@ def get_prime_factors(n):
 
 def is_primitive_root(b, p, prime_factors):
     """
-    Prüft, ob b ein primitiver Wurzel modulo p ist.
+    Checks if b is a primitive root modulo p.
     """
     b = int(b)
     p = int(p)
@@ -197,7 +197,7 @@ def is_primitive_root(b, p, prime_factors):
 
 def find_generator(p):
     """
-    Findet eine primitive Wurzel modulo Primzahl p.
+    Finds a primitive root modulo prime p.
     """
     p = int(p)
     prime_factors = get_prime_factors(p - 1)

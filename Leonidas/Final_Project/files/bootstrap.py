@@ -10,17 +10,16 @@ ROUNDS = 20
 
 class Bootstrap:
     """
-    Entspricht grob deiner C++-Klasse Bootstrap.
-    Nutzt Pythons random, um Startwerte und Kandidaten zu erzeugen.
+    Uses Python's random module to generate initial values and candidates.
     """
 
     def __init__(self):
-        # SystemRandom nutzt OS-Randomness
+        # SystemRandom uses OS randomness
         self.rng = random.SystemRandom()
 
     def random_number(self, bit_length):
         if bit_length <= 0:
-            raise ValueError("bit_length muss > 0 sein")
+            raise ValueError("bit_length must be > 0")
 
         result = 0
         bytes_needed = (bit_length + 7) // 8
@@ -29,11 +28,11 @@ class Bootstrap:
             random_byte = self.rng.randrange(0, 256)
             result = (result << 8) | random_byte
 
-        # Maske auf gewünschte Bitlänge
+        # Mask to desired bit length
         mask = (1 << bit_length) - 1
         result = result & mask
 
-        # Höchstes Bit setzen, damit es wirklich bit_length Bits sind
+        # Set the highest bit to ensure it really has bit_length bits
         result |= (1 << (bit_length - 1))
 
         return result
@@ -46,7 +45,7 @@ class Bootstrap:
 
     def random_in_range(self, min_value, max_value):
         if min_value > max_value:
-            raise ValueError("min_value darf nicht größer als max_value sein")
+            raise ValueError("min_value cannot be greater than max_value")
 
         min_value = int(min_value)
         max_value = int(max_value)
@@ -62,7 +61,7 @@ class Bootstrap:
 
     def generate_seed(self, n):
         """
-        Erzeugt Seed s mit 2 <= s <= n-1 und gcd(s, n) = 1.
+        Generates a seed s with 2 <= s <= n-1 and gcd(s, n) = 1.
         """
         n = int(n)
         seed = self.random_in_range(2, n - 1)
@@ -72,7 +71,7 @@ class Bootstrap:
 
     def generate_prime_congruent_3_mod_4(self, bit_length):
         """
-        Erzeugt eine Primzahl p mit p ≡ 3 (mod 4).
+        Generates a prime number p with p ≡ 3 (mod 4).
         """
         candidate = INIT_NOT_PRIME
         while not miller_rabin_test(candidate, ROUNDS, self):
@@ -83,7 +82,7 @@ class Bootstrap:
 
     def generate_prime_in_range(self, min_value, max_value):
         """
-        Erzeugt eine Primzahl im Bereich [min_value, max_value].
+        Generates a prime number in the range [min_value, max_value].
         """
         candidate = INIT_NOT_PRIME
         while not miller_rabin_test(candidate, ROUNDS, self):
@@ -94,7 +93,7 @@ class Bootstrap:
 
     def generate_prime_in_range_congruent_3_mod_4(self, min_value, max_value):
         """
-        Erzeugt eine Primzahl im Bereich [min, max] mit p ≡ 3 (mod 4).
+        Generates a prime number in the range [min, max] with p ≡ 3 (mod 4).
         """
         candidate = INIT_NOT_PRIME
         while not miller_rabin_test(candidate, ROUNDS, self):
