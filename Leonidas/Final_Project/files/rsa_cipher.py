@@ -249,7 +249,7 @@ class RSA(CipherBase):
         cipher_text = int(cipher_text)
         plain_text = mod_pow(cipher_text, d_target, n_target)
         msg = color_string(str(plain_text))
-        sys.stderr.write("\n✅ Successfully decrypted message: " + msg + "\n")
+        sys.stderr.write("\n Successfully decrypted message: " + msg + "\n")
 
         return plain_text
 

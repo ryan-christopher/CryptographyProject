@@ -201,12 +201,12 @@ pub fn elgamal_gen_public_key(p: i128, g: i128, r: i128) -> i128{
     return fast_exponentiation(g, r, p);
 }
 
-pub fn elgamal_encrypt(message: i128, recipient_pub_key: i128, priv_key: i128, p: i128) -> i128 {
+pub fn encrypt(message: i128, recipient_pub_key: i128, priv_key: i128, p: i128) -> i128 {
     let cipher = message * fast_exponentiation(recipient_pub_key, priv_key, p) % p;
     return cipher;
 }
 
-pub fn elgamal_decrypt(cipher: i128, recipient_pub_key: i128, r: i128, p: i128) -> i128 {
+pub fn decrypt(cipher: i128, recipient_pub_key: i128, r: i128, p: i128) -> i128 {
     //let mut key = fast_exponentiation(recipient_pub_key, priv_key, p);
     let inverse_val = fast_exponentiation(recipient_pub_key, r, p);
     let inverse  = find_inverse(inverse_val, p);
@@ -215,10 +215,11 @@ pub fn elgamal_decrypt(cipher: i128, recipient_pub_key: i128, r: i128, p: i128) 
     return message;
 }
 
-pub fn elgamal_intercept(cipher: i128, generator: i128, target_pub_key: i128, recipient_pub_key: i128, p: i128) -> i128 {
-    let recovered_key = baby_step_giant_step(generator, target_pub_key, p);
-    //println!("{}", recovered_key);
-    let message = elgamal_decrypt(cipher, recipient_pub_key, recovered_key, p);
+
+pub fn intercept(cipher: i128, generator: i128, sender_pub_key: i128, recipient_pub_key: i128, p: i128) -> i128 {
+    let recovered_key = baby_step_giant_step(generator, recipient_pub_key, p);
+    println!("Recovered key: {}", recovered_key);
+    let message = decrypt(cipher, sender_pub_key, recovered_key, p);
     //println!("{}", message);
     return message
 }
@@ -235,20 +236,17 @@ pub fn baby_step_giant_step(log_base: i128, log_val: i128, z: i128) -> i128 {
     // calculate each value for j from 0 to m-1 as (log_base^j) mod z
     let mut j_list = Vec::<i128>::new();
     for j in 0..m {
-        j_list.push(log_base.pow(j as u32) % z);
+        j_list.push(fast_exponentiation(log_base, j, z));
     }
 
-    // create vector to store list of values for i
-    // [giving up here, has something to do with multiplicative inverse, use extended euclidian algo and if it is 1 do something?]
-    //println!("m: {}", m);
-    //println!("j: {:?}", j_list);
     let inverse = find_inverse(log_base, z);
     let inverse_pow_m = fast_exponentiation(inverse, m, z);
 
     let mut i_list = Vec::<i128>::new();
     for i in 0..m {
         let inverse_pow_m_i = fast_exponentiation(inverse_pow_m, i, z);
-        i_list.push((log_val * inverse_pow_m_i)  % z);
+        println!("inverse pow m i");
+        i_list.push((log_val * inverse_pow_m_i) % z);
 
         let check_i_and_m = j_list.clone().into_iter().position(|x| x == i_list[i as usize]);
         if check_i_and_m.is_some(){

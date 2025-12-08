@@ -1,1 +1,4 @@
-This is the notes file for Leonidas.
+Just Run main.py the rest should be selfexplaining,
+if you understand RSA and El Gamal....
+
+Have fun using it! :)
