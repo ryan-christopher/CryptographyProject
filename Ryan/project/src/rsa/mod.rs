@@ -222,10 +222,11 @@ pub fn decrypt(ciphertext: i128, n: i128, d: i128) -> i128 {
     return fast_exponentiation(ciphertext, d, n)
 }
 
-pub fn rsa_intercept(ciphertext: i128, n: i128, e: i128) -> i128 {
+pub fn intercept(ciphertext: i128, n: i128, e: i128) -> i128 {
     let factor_1 = pollards_rho(n);
     let factor_2 = n / factor_1;
     let phi_n = (factor_1 - 1) * (factor_2 - 1);
     let d = find_inverse(e, phi_n);
+    println!("d: {}", d);
     return decrypt(ciphertext, n, d)
 }
