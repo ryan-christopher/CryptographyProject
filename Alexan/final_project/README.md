@@ -9,6 +9,11 @@ Implementation of RSA and ElGamal encryption algorithms, with cryptanalysis atta
 
 ## Running
 
+### To run the complete demo of the final project
+```bash
+./demo.sh
+```
+
 ### For more details regarding CLI options
 ```bash
 ./bin/finalproject -?
